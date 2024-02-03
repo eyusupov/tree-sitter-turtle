@@ -185,27 +185,27 @@ module.exports = grammar({
     verb: $ => choice(
       $.predicate,
       'a',
-      seq('has', $.expression),
-      seq('is', $.expression, 'of'),
+      seq('has', $._expression),
+      seq('is', $._expression, 'of'),
       '=',
       '<=',
       '=>'
     ),
 
     // [13]
-    subject: $ => $.expression,
+    subject: $ => $._expression,
 
     // [14]
     predicate: $ => choice(
-      $.expression,
-      seq('<-', $.expression)
+      $._expression,
+      seq('<-', $._expression)
     ),
 
     // [15]
-    object: $ => $.expression,
+    object: $ => $._expression,
 
     // [16]
-    expression: $ => $.path,
+    _expression: $ => $.path,
 
     // [17]
     path: $ => seq(
@@ -240,6 +240,7 @@ module.exports = grammar({
     // [20]
     blank_node_property_list: $ => seq(
       '[',
+      repeat(choice(...WS)),
       $.predicate_object_list,
       ']'
     ),
@@ -272,7 +273,7 @@ module.exports = grammar({
         $.n3_statement,
         optional(seq(
           '.',
-          $.formula_content
+          optional($.formula_content)
         )),
       ),
       seq(

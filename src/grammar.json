@@ -257,7 +257,7 @@
             },
             {
               "type": "SYMBOL",
-              "name": "expression"
+              "name": "_expression"
             }
           ]
         },
@@ -270,7 +270,7 @@
             },
             {
               "type": "SYMBOL",
-              "name": "expression"
+              "name": "_expression"
             },
             {
               "type": "STRING",
@@ -294,14 +294,14 @@
     },
     "subject": {
       "type": "SYMBOL",
-      "name": "expression"
+      "name": "_expression"
     },
     "predicate": {
       "type": "CHOICE",
       "members": [
         {
           "type": "SYMBOL",
-          "name": "expression"
+          "name": "_expression"
         },
         {
           "type": "SEQ",
@@ -312,7 +312,7 @@
             },
             {
               "type": "SYMBOL",
-              "name": "expression"
+              "name": "_expression"
             }
           ]
         }
@@ -320,9 +320,9 @@
     },
     "object": {
       "type": "SYMBOL",
-      "name": "expression"
+      "name": "_expression"
     },
-    "expression": {
+    "_expression": {
       "type": "SYMBOL",
       "name": "path"
     },
@@ -436,6 +436,30 @@
           "value": "["
         },
         {
+          "type": "REPEAT",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "PATTERN",
+                "value": "\\x20"
+              },
+              {
+                "type": "PATTERN",
+                "value": "\\x09"
+              },
+              {
+                "type": "PATTERN",
+                "value": "\\x0D"
+              },
+              {
+                "type": "PATTERN",
+                "value": "\\x0A"
+              }
+            ]
+          }
+        },
+        {
           "type": "SYMBOL",
           "name": "predicate_object_list"
         },
@@ -532,8 +556,16 @@
                       "value": "."
                     },
                     {
-                      "type": "SYMBOL",
-                      "name": "formula_content"
+                      "type": "CHOICE",
+                      "members": [
+                        {
+                          "type": "SYMBOL",
+                          "name": "formula_content"
+                        },
+                        {
+                          "type": "BLANK"
+                        }
+                      ]
                     }
                   ]
                 },
