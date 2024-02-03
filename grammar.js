@@ -1,17 +1,17 @@
-// [X]  See section "6.5 Grammar" in https://www.w3.org/TR/turtle/#sec-grammar-grammar for
+// [X]  See section "4.7 Grammar" in https://w3c.github.io/N3/spec/#grammar for
 //      corresponding rule x.
 
-// [26]
+// [35]
 const UCHAR = /(\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})/
 
-// [154s]
+// [155s]
 const EXPONENT = [
   /[eE]/,
   /[+-]?/,
   /[0-9]+/
 ]
 
-// [161s]
+// [162s]
 const WS = [
   /\x20/,
   /\x09/,
@@ -37,10 +37,10 @@ const PN_CHARS_BASE = [
   /[\u{10000}-\u{EFFFF}]/u
 ]
 
-// [164s]
+// [165s]
 const PN_CHARS_U = PN_CHARS_BASE.concat('_')
 
-// [166s]
+// [167s]
 const PN_CHARS = PN_CHARS_U.concat([
   '-',
   /[0-9]/,
@@ -49,14 +49,14 @@ const PN_CHARS = PN_CHARS_U.concat([
   /[\u203F-\u2040]/
 ])
 
-// [171s]
+// [172s]
 const HEX = [
   /[0-9]/,
   /[A-F]/,
   /[a-f]/
 ]
 
-// [172s]
+// [173s]
 const PN_LOCAL_ESC = [
   '_',
   '~',
@@ -93,7 +93,7 @@ String.prototype.toCaseInsensitiv = function () {
 }
 
 module.exports = grammar({
-  name: 'turtle',
+  name: 'n3',
 
   extras: $ => [
     $.comment,
@@ -105,145 +105,230 @@ module.exports = grammar({
   rules: {
 
     // [1]
-    turtle_doc: $ => repeat($.statement),
+    n3_doc: $ => repeat(choice(
+      seq($.n3_statement, '.'),
+      $.sparql_directive)
+    ),
 
     comment: $ => token(prec(-1, /#.*/)),
 
     // [2]
-    statement: $ => choice(
-      $.directive,
-      seq($.triples, '.')
+    n3_statement: $ => choice(
+      $.n3_directive,
+      $.triples
     ),
 
     // [3]
-    directive: $ => choice(
+    n3_directive: $ => choice(
       $.prefix_id,
-      $.base,
-      $.sparql_prefix,
-      $.sparql_base
+      $.base
     ),
 
     // [4]
-    prefix_id: $ => seq(
-      '@prefix',
-      $.namespace,
-      $.iri_reference,
-      '.'
+    sparql_directive: $ => choice(
+      $.sparql_base,
+      $.sparql_prefix
     ),
 
     // [5]
-    base: $ => seq(
-      '@base',
-      $.iri_reference,
-      '.'
-    ),
-
-    // [5s]
     sparql_base: $ => seq(
       'BASE'.toCaseInsensitiv(),
       $.iri_reference,
     ),
 
-    // [6s]
+    // [6]
     sparql_prefix: $ => seq(
       'PREFIX'.toCaseInsensitiv(),
-      $.namespace,
+      $.pname_ns,
       $.iri_reference,
     ),
 
-    // [6]
-    triples: $ => choice(
-      seq(
-        $.subject,
-        $.property_list
-      ),
-      seq(
-        $.blank_node_property_list,
-        optional($.property_list)
-      )
-    ),
-
     // [7]
-    property_list: $ => seq(
-      $.property,
-      repeat(seq(
-        ';',
-        optional($.property)
-      ))
-    ),
-
-    // Enable incremental selection of properties
-    property: $ => seq(
-      $.predicate,
-      $.object_list,
+    prefix_id: $ => seq(
+      '@prefix',
+      $.pname_ns,
+      $.iri_reference,
     ),
 
     // [8]
-    object_list: $ => seq(
-      $._object,
-      repeat(seq(
-        ',',
-        $._object
-      ))
+    base: $ => seq(
+      '@base',
+      $.iri_reference,
     ),
 
+
     // [9]
-    // [11]
-    predicate: $ => choice(
-      $._iri,
-      'a'
+    triples: $ => seq(
+      $.subject,
+      $.predicate_object_list
     ),
 
     // [10]
-    subject: $ => choice(
-      $._iri,
-      $._blank_node,
-      $.collection
+    predicate_object_list: $ => seq(
+      $.verb,
+      $.object_list,
+      repeat(
+        seq( ';', optional(seq($.verb, $.object_list)))
+      ),
+    ),
+
+    // [11]
+    object_list: $ => seq(
+      $.object,
+      repeat(seq(
+        ',',
+        $.object
+      ))
     ),
 
     // [12]
-    _object: $ => choice(
-      $._iri,
-      $._blank_node,
-      $.collection,
-      $.blank_node_property_list,
-      $._literal
+    verb: $ => choice(
+      $.predicate,
+      'a',
+      seq('has', $.expression),
+      seq('is', $.expression, 'of'),
+      '=',
+      '<=',
+      '=>'
     ),
 
     // [13]
+    subject: $ => $.expression,
+
+    // [14]
+    predicate: $ => choice(
+      $.expression,
+      seq('<-', $.expression)
+    ),
+
+    // [15]
+    object: $ => $.expression,
+
+    // [16]
+    expression: $ => $.path,
+
+    // [17]
+    path: $ => seq(
+      $.pathItem,
+      optional(
+        choice(
+          seq('!', $.path),
+          seq('^', $.path)
+        )
+      )
+    ),
+
+    // [18]
+    pathItem: $ => choice(
+      $._iri,
+      $._blank_node,
+      $.quick_var,
+      $.collection,
+      $.blank_node_property_list,
+      $.iri_property_list,
+      $._literal,
+      $.formula
+    ),
+
+    // [19]
     _literal: $ => choice(
       $.rdf_literal,
       $._numeric_literal,
       $.boolean_literal
     ),
 
-    // [14]
+    // [20]
     blank_node_property_list: $ => seq(
       '[',
-      $.property_list,
+      $.predicate_object_list,
       ']'
     ),
 
-    // [15]
+    // [21]
+    iri_property_list: $ => seq(
+      $.ipl_start,
+      $._iri,
+      $.predicate_object_list,
+      ']'
+    ),
+
+    // [22]
     collection: $ => seq(
       '(',
-      optional($.object_collection),
+      repeat($.object),
       ')'
     ),
 
-    // Enable incremental selection analog to blank_node_property_list
-    object_collection: $ => repeat1(
-      $._object,
+    // [23]
+    formula: $ => seq(
+      '{',
+      optional($.formula_content),
+      '}'
     ),
 
-    // [16]
+    // [24]
+    formula_content: $ => choice(
+      seq(
+        $.n3_statement,
+        optional(seq(
+          '.',
+          $.formula_content
+        )),
+      ),
+      seq(
+        $.sparql_directive,
+        optional($.formula_content)
+      )
+    ),
+
+    // [25]
     _numeric_literal: $ => choice(
-      $.integer,
+      $.double,
       $.decimal,
-      $.double
+      $.integer
     ),
 
-    // [17]
+    // [26]
+    rdf_literal: $ => seq(
+      field('value', $.string),
+      optional(choice(
+        $.lang_tag,
+        field('datatype', seq('^^', $._iri))
+      ))
+    ),
+
+    // [27]
+    _iri: $ => choice(
+      $.iri_reference,
+      $.prefixed_name
+    ),
+
+    // [28]
+    prefixed_name: $ => choice(
+      $.pname_ns,
+      $.pname_ln
+    ),
+
+    // [29]
+    _blank_node: $ => choice(
+      $.blank_node_label,
+      $.anon
+    ),
+
+    // [30]
+    // [36]
+    quick_var: $=> seq(
+      "?",
+      $.pn_local
+    ),
+
+    // [31]
+    boolean_literal: $ => choice(
+      'true',
+      'false'
+    ),
+
+    // [32]
     string: $ => choice(
       $._string_literal_quote,
       $._string_literal_single_quote,
@@ -251,7 +336,14 @@ module.exports = grammar({
       $._string_literal_long_single_quote,
     ),
 
-    // [18]
+    // [33]
+    ipl_start: $ => seq(
+      '[',
+      repeat(choice(...WS)),
+      'id' // what is this???
+    ),
+
+    // [139s]
     iri_reference: $ => seq(
       '<',
       token.immediate(repeat(choice(
@@ -263,118 +355,19 @@ module.exports = grammar({
       )
     ),
 
-    // [19]
-    integer: $ => token(/[+-]?[0-9]+/),
-
-    // [20]
-    decimal: $ => token(seq(/[+-]?/, /[0-9]*/, '.', /[0-9]+/)),
-
-    // [21]
-    double: $ => token(seq(
-      /[+-]?/,
-      choice(
-        seq(/[0-9]+/, '.', /[0-9]*/, seq(...EXPONENT)),
-        seq('.', /[0-9]+/, seq(...EXPONENT)),
-        seq(/[0-9]+/, seq(...EXPONENT))
-      ))
-    ),
-
-    // [22]
-    _string_literal_quote: $ => seq(
-      '"',
-      repeat(choice(
-        /[^\x22\x5C\x0A\x0D]/,
-        $.echar,
-        UCHAR
-      )),
-      '"',
-    ),
-
-    // [23]
-    _string_literal_single_quote: $ => seq(
-      "'",
-      repeat(choice(
-        /[^\x27\x5C\x0A\x0D]/,
-        $.echar,
-        UCHAR
-      )),
-      "'"
-    ),
-
-    // [24]
-    _string_literal_long_single_quote: $ => seq(
-      "'''",
-      repeat(seq(
-        optional(choice(
-          "'",
-          "''",
-        )),
-        choice(
-          /[^'\\]/,
-          $.echar,
-          UCHAR
-        )
-      )),
-      "'''",
-    ),
-
-    // [25]
-    _string_literal_long_quote: $ => seq(
-      '"""',
-      repeat(seq(
-        optional(choice(
-          '"',
-          '""',
-        )),
-        choice(
-          /[^"\\]/,
-          $.echar,
-          UCHAR
-        )
-      )),
-      '"""',
-    ),
-
-    // [128s]
-    rdf_literal: $ => seq(
-      field('value', $.string),
-      optional(choice(
-        $.lang_tag,
-        field('datatype', seq('^^', $._iri))
-      ))
-    ),
-
-    // [133s]
-    boolean_literal: $ => choice(
-      'true',
-      'false'
-    ),
-
-    // [135s]
-    _iri: $ => choice(
-      $.iri_reference,
-      $.prefixed_name
-    ),
-
-    // [136s]
-    prefixed_name: $ => seq(
-      $.namespace,
-      optional($.pn_local)
-    ),
-
-    // [137s]
-    _blank_node: $ => choice(
-      $.blank_node_label,
-      $.anon
-    ),
-
-    // [139s]
-    namespace: $ => seq(
+    // [140s]
+    pname_ns: $ => seq(
       optional($.pn_prefix),
       ':'
     ),
 
     // [141s]
+    pname_ln: $ => seq(
+      $.pname_ns,
+      $.pn_local
+    ),
+
+    // [142s]
     blank_node_label: $ => seq(
       '_:',
       token.immediate(seq(
@@ -392,17 +385,89 @@ module.exports = grammar({
       ))
     ),
 
-    // [144s]
+    // [145s]
     lang_tag: $ => token(seq(
       '@',
       /[a-zA-Z]+/,
       repeat(seq('-', /[a-zA-Z0-9]+/))
     )),
 
+    // [146s]
+    integer: $ => token(/[+-]?[0-9]+/),
+
+    // [147s]
+    decimal: $ => token(seq(/[+-]?/, /[0-9]*/, '.', /[0-9]+/)),
+
+    // [148s]
+    double: $ => token(seq(
+      /[+-]?/,
+      choice(
+        seq(/[0-9]+/, '.', /[0-9]*/, seq(...EXPONENT)),
+        seq('.', /[0-9]+/, seq(...EXPONENT)),
+        seq(/[0-9]+/, seq(...EXPONENT))
+      ))
+    ),
+
+    // [156s]
+    _string_literal_quote: $ => seq(
+      '"',
+      repeat(choice(
+        /[^\x22\x5C\x0A\x0D]/,
+        $.echar,
+        UCHAR
+      )),
+      '"',
+    ),
+
+    // [157s]
+    _string_literal_single_quote: $ => seq(
+      "'",
+      repeat(choice(
+        /[^\x27\x5C\x0A\x0D]/,
+        $.echar,
+        UCHAR
+      )),
+      "'"
+    ),
+
+    // [158s]
+    _string_literal_long_single_quote: $ => seq(
+      "'''",
+      repeat(seq(
+        optional(choice(
+          "'",
+          "''",
+        )),
+        choice(
+          /[^'\\]/,
+          $.echar,
+          UCHAR
+        )
+      )),
+      "'''",
+    ),
+
     // [159s]
+    _string_literal_long_quote: $ => seq(
+      '"""',
+      repeat(seq(
+        optional(choice(
+          '"',
+          '""',
+        )),
+        choice(
+          /[^"\\]/,
+          $.echar,
+          UCHAR
+        )
+      )),
+      '"""',
+    ),
+
+    // [160s]
     echar: $ => /\\[tbnrf\\"']/,
 
-    // [162s]
+    // [163s]
     anon: $ => token(seq(
       '[',
       repeat(choice(...WS)),
@@ -446,6 +511,5 @@ module.exports = grammar({
         )
       ))
     )),
-
   }
 })
