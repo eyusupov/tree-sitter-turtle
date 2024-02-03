@@ -340,7 +340,7 @@ module.exports = grammar({
     ipl_start: $ => seq(
       '[',
       repeat(choice(...WS)),
-      'id' // what is this???
+      'id'
     ),
 
     // [139s]
