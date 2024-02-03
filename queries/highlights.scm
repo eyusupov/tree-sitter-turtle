@@ -6,7 +6,7 @@
   "_:"
   "<"
   ">"
-  (namespace)
+  (pname_ns)
 ] @module
 
 [
@@ -17,6 +17,11 @@
 (blank_node_label) @variable
 
 "a" @variable.builtin
+"=" @variable.builtin
+"=>" @variable.builtin
+"<=" @variable.builtin
+"is" @variable.builtin
+"of" @variable.builtin
 
 (integer) @number
 
@@ -45,6 +50,8 @@
   ")"
   "["
   "]"
+  "{"
+  "}"
   (anon)
 ] @punctuation.bracket
 
@@ -59,5 +66,5 @@
       [
         "<"
         ">"
-        (namespace)
+        (pname_ns)
       ] @type) @type)
