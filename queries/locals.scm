@@ -1,4 +1,4 @@
-(doc) @local.scope
+(n3_doc) @local.scope
 
 (subject
   [
