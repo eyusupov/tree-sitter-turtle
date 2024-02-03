@@ -1,12 +1,5 @@
 (n3_doc) @local.scope
 
-(subject
-  [
-    (prefixed_name)
-    (iri_reference)
-  ] @local.definition.var)
+(subject (expression (path (pathItem)))) @local.definition.var
 
-[
-  (prefixed_name)
-  (iri_reference)
-] @local.reference
+(expression (path (pathItem))) @local.reference
