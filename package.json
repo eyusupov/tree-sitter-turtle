@@ -25,5 +25,15 @@
   },
   "devDependencies": {
     "tree-sitter-cli": "^0.20.0"
-  }
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.n3",
+      "file-types": ["n3"]
+    },
+    {
+      "scope": "source.turtle",
+      "file-types": ["ttl"]
+    }
+  ]
 }
