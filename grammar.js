@@ -106,26 +106,26 @@ module.exports = grammar({
 
     // [1]
     n3_doc: $ => repeat(choice(
-      seq($.n3_statement, '.'),
-      $.sparql_directive)
+      seq($._n3_statement, '.'),
+      $._sparql_directive)
     ),
 
     comment: $ => token(prec(-1, /#.*/)),
 
     // [2]
-    n3_statement: $ => choice(
-      $.n3_directive,
+    _n3_statement: $ => choice(
+      $._n3_directive,
       $.triples
     ),
 
     // [3]
-    n3_directive: $ => choice(
+    _n3_directive: $ => choice(
       $.prefix_id,
       $.base
     ),
 
     // [4]
-    sparql_directive: $ => choice(
+    _sparql_directive: $ => choice(
       $.sparql_base,
       $.sparql_prefix
     ),
@@ -160,7 +160,7 @@ module.exports = grammar({
     // [9]
     triples: $ => seq(
       $.subject,
-      $.predicate_object_list
+      optional($.predicate_object_list)
     ),
 
     // [10]
@@ -209,7 +209,7 @@ module.exports = grammar({
 
     // [17]
     path: $ => seq(
-      $.pathItem,
+      $.path_item,
       optional(
         choice(
           seq('!', $.path),
@@ -219,7 +219,7 @@ module.exports = grammar({
     ),
 
     // [18]
-    pathItem: $ => choice(
+    path_item: $ => choice(
       $._iri,
       $._blank_node,
       $.quick_var,
@@ -256,29 +256,29 @@ module.exports = grammar({
     // [22]
     collection: $ => seq(
       '(',
-      repeat($.object),
+      repeat($._expression),
       ')'
     ),
 
     // [23]
     formula: $ => seq(
       '{',
-      optional($.formula_content),
+      optional($._formula_content),
       '}'
     ),
 
     // [24]
-    formula_content: $ => choice(
+    _formula_content: $ => choice(
       seq(
-        $.n3_statement,
+        $._n3_statement,
         optional(seq(
           '.',
-          optional($.formula_content)
+          optional($._formula_content)
         )),
       ),
       seq(
-        $.sparql_directive,
-        optional($.formula_content)
+        $._sparql_directive,
+        optional($._formula_content)
       )
     ),
 
@@ -293,7 +293,7 @@ module.exports = grammar({
     rdf_literal: $ => seq(
       field('value', $.string),
       optional(choice(
-        $.lang_tag,
+        field('lang', $.lang_tag),
         field('datatype', seq('^^', $._iri))
       ))
     ),
@@ -392,7 +392,6 @@ module.exports = grammar({
       /[a-zA-Z]+/,
       repeat(seq('-', /[a-zA-Z0-9]+/))
     )),
-
     // [146s]
     integer: $ => token(/[+-]?[0-9]+/),
 
