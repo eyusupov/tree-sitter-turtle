@@ -1,7 +1,7 @@
 {
   "targets": [
     {
-      "target_name": "tree_sitter_turtle_binding",
+      "target_name": "tree_sitter_n3_binding",
       "include_dirs": [
         "<!(node -e \"require('nan')\")",
         "src"

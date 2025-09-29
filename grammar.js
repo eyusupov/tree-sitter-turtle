@@ -106,26 +106,26 @@ module.exports = grammar({
 
     // [1]
     n3_doc: $ => repeat(choice(
-      seq($._n3_statement, '.'),
-      $._sparql_directive)
+      seq($.n3_statement, '.'),
+      $.sparql_directive)
     ),
 
     comment: $ => token(prec(-1, /#.*/)),
 
     // [2]
-    _n3_statement: $ => choice(
-      $._n3_directive,
+    n3_statement: $ => choice(
+      $.n3_directive,
       $.triples
     ),
 
     // [3]
-    _n3_directive: $ => choice(
+    n3_directive: $ => choice(
       $.prefix_id,
       $.base
     ),
 
     // [4]
-    _sparql_directive: $ => choice(
+    sparql_directive: $ => choice(
       $.sparql_base,
       $.sparql_prefix
     ),
@@ -168,7 +168,7 @@ module.exports = grammar({
       $.verb,
       $.object_list,
       repeat(
-        seq( ';', optional(seq($.verb, $.object_list)))
+        seq(';', optional(seq($.verb, $.object_list)))
       ),
     ),
 
@@ -185,27 +185,27 @@ module.exports = grammar({
     verb: $ => choice(
       $.predicate,
       'a',
-      seq('has', $._expression),
-      seq('is', $._expression, 'of'),
+      seq('has', $.expression),
+      seq('is', $.expression, 'of'),
       '=',
       '<=',
       '=>'
     ),
 
     // [13]
-    subject: $ => $._expression,
+    subject: $ => $.expression,
 
     // [14]
     predicate: $ => choice(
-      $._expression,
-      seq('<-', $._expression)
+      $.expression,
+      seq('<-', $.expression)
     ),
 
     // [15]
-    object: $ => $._expression,
+    object: $ => $.expression,
 
     // [16]
-    _expression: $ => $.path,
+    expression: $ => $.path,
 
     // [17]
     path: $ => seq(
@@ -233,7 +233,7 @@ module.exports = grammar({
     // [19]
     _literal: $ => choice(
       $.rdf_literal,
-      $._numeric_literal,
+      $.numeric_literal,
       $.boolean_literal
     ),
 
@@ -256,34 +256,34 @@ module.exports = grammar({
     // [22]
     collection: $ => seq(
       '(',
-      repeat($._expression),
+      repeat($.expression),
       ')'
     ),
 
     // [23]
     formula: $ => seq(
       '{',
-      optional($._formula_content),
+      optional($.formula_content),
       '}'
     ),
 
     // [24]
-    _formula_content: $ => choice(
+    formula_content: $ => choice(
       seq(
-        $._n3_statement,
+        $.n3_statement,
         optional(seq(
           '.',
-          optional($._formula_content)
+          optional($.formula_content)
         )),
       ),
       seq(
-        $._sparql_directive,
-        optional($._formula_content)
+        $.sparql_directive,
+        optional($.formula_content)
       )
     ),
 
     // [25]
-    _numeric_literal: $ => choice(
+    numeric_literal: $ => choice(
       $.double,
       $.decimal,
       $.integer
@@ -318,7 +318,7 @@ module.exports = grammar({
 
     // [30]
     // [36]
-    quick_var: $=> seq(
+    quick_var: $ => seq(
       "?",
       $.pn_local
     ),

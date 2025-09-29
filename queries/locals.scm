@@ -1,5 +1,5 @@
 (n3_doc) @local.scope
 
-(subject (path (pathItem))) @local.definition.var
+(subject (expression (path (path_item)))) @local.definition.var
 
-(path (pathItem)) @local.reference
+(path (path_item)) @local.reference

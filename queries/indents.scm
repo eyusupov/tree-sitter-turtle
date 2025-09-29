@@ -1,5 +1,5 @@
 [
-  (n3_statement)
+  (triples)
   (blank_node_property_list)
   (collection)
 ] @indent.begin
