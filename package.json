@@ -33,6 +33,7 @@
   "homepage": "https://github.com/BonaBeavis/tree-sitter-n3#readme",
   "dependencies": {
     "node-addon-api": "^7.1.0",
+    "node-gyp": "^11.4.2",
     "node-gyp-build": "^4.8.0"
   },
   "peerDependencies": {
@@ -44,8 +45,8 @@
     }
   },
   "devDependencies": {
-    "tree-sitter-cli": "^0.20.0",
-    "prebuildify": "^6.0.0"
+    "prebuildify": "^6.0.0",
+    "tree-sitter-cli": "^0.21.0"
   },
   "tree-sitter": [
     {
